@@ -96,6 +96,10 @@
             while ($k = $kelas->fetch_assoc()) {
                 echo "<option value='$k[kelas]'>$k[kelas]</option>";
             }
+            $kelas = $conn->query("SELECT DISTINCT kelas FROM siswaX ORDER BY kelas ASC");
+            while ($k = $kelas->fetch_assoc()) {
+                echo "<option value='$k[kelas]'>$k[kelas]</option>";
+            }
             ?>
         </select>
         <table>
