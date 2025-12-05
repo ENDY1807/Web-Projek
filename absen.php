@@ -15,7 +15,8 @@
             background: white;
         }
 
-        th, td {
+        th,
+        td {
             padding: 10px;
             border-bottom: 1px solid #ddd;
         }
@@ -38,7 +39,8 @@
             background: #004a99;
         }
 
-        select, input {
+        select,
+        input {
             padding: 8px;
             border-radius: 7px;
         }
@@ -52,56 +54,59 @@
         }
 
         .Hadir {
-            background-color: #459548FF;
+            background: #459548;
             color: white;
         }
 
         .Izin {
-            background-color: #D2BD00FF;
-            color: black;
+            background: #D2BD00;
         }
 
         .Sakit {
-            background-color: #008CCDFF;
+            background: #008CCD;
             color: white;
         }
 
         .Alpa {
-            background-color: #9C0A00FF;
+            background: #9C0A00;
             color: white;
         }
     </style>
 </head>
 
 <body>
-<div class="container">
+
+    <header class="dashboard-header">
         <div class="header-left">
             <img src="assets/absensi.png" alt="Logo Absensi" class="logo">
             <h1>Absensi Kelas</h1>
         </div>
-        <div class="rekap">
+        <div class="header-right">
+            <span id="greeting" class="greeting"></span>
             <a href="rekap.php">
-                <button>Rekap Absen</button>
+                <button class="btn">Rekap Absen</button>
             </a>
         </div>
     </header>
+    <div class="container">
         <label>Pilih Tanggal:</label>
         <input type="date" id="tanggalAbsen">
         <br><br>
+
         <label>Pilih Kelas:</label>
-        <select id="pilihKelas" onchange="loadSiswa()" style="padding:8px; border-radius:6px;">
+        <select id="pilihKelas" onchange="loadSiswa()">
             <option value="">Pilih Kelas</option>
             <?php
-            $kelas = $conn->query("SELECT DISTINCT kelas FROM siswaXI ORDER BY kelas ASC");
-            while ($k = $kelas->fetch_assoc()) {
-                echo "<option value='$k[kelas]'>$k[kelas]</option>";
-            }
             $kelas = $conn->query("SELECT DISTINCT kelas FROM siswaX ORDER BY kelas ASC");
-            while ($k = $kelas->fetch_assoc()) {
+            while ($k = $kelas->fetch_assoc())
                 echo "<option value='$k[kelas]'>$k[kelas]</option>";
-            }
+
+            $kelas = $conn->query("SELECT DISTINCT kelas FROM siswaXI ORDER BY kelas ASC");
+            while ($k = $kelas->fetch_assoc())
+                echo "<option value='$k[kelas]'>$k[kelas]</option>";
             ?>
         </select>
+
         <table>
             <thead>
                 <tr>
@@ -112,13 +117,16 @@
             </thead>
             <tbody id="tbodySiswa"></tbody>
         </table>
+
         <button class="btn" onclick="simpanAbsensi()">Simpan Absensi</button>
+
     </div>
+
     <script>
-        document.getElementById("pilihKelas").addEventListener("change", loadSiswa);
         function loadSiswa() {
             const kelas = document.getElementById("pilihKelas").value;
             if (!kelas) return;
+
             fetch("api_datasiswa.php?kelas=" + kelas)
                 .then(res => res.json())
                 .then(data => {
@@ -126,22 +134,21 @@
                     tbody.innerHTML = "";
 
                     data.forEach((siswa, i) => {
-                        const tr = document.createElement("tr");
-
-                        tr.innerHTML = `
-                            <td>${i + 1}</td>
-                            <td>${siswa.Nama}</td>
-                            <td>
-                                <select onchange="ubahWarna(this)" name="status_${siswa.NIS}">
-                                    <option value="" class="">Status</option>
-                                    <option value="Hadir" class="Hadir">Hadir</option>
-                                    <option value="Izin" class="Izin">Izin</option>
-                                    <option value="Sakit" class="Sakit">Sakit</option>
-                                    <option value="Alpa" class="Alpa">Alpa</option>
-                                </select>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
+                        tbody.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${siswa.nama}</td>
+                        <td>
+                            <select class="statusSelect" data-nis="${siswa.nis}">
+                                <option value="">Status</option>
+                                <option value="Hadir">Hadir</option>
+                                <option value="Izin">Izin</option>
+                                <option value="Sakit">Sakit</option>
+                                <option value="Alpa">Alpa</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
                     });
                 });
         }
@@ -150,29 +157,58 @@
             const tanggal = document.getElementById("tanggalAbsen").value;
             const kelas = document.getElementById("pilihKelas").value;
 
-            if (!tanggal) return alert("Tanggal belum dipilih!");
-            if (!kelas) return alert("Kelas belum dipilih!");
+            if (!tanggal || !kelas) return alert("Lengkapi tanggal dan kelas.");
 
-            const radios = document.querySelectorAll("tbody input[type=radio]");
-            let hasilAbsen = {};
+            const selects = document.querySelectorAll(".statusSelect");
+            let absensi = [];
 
-            radios.forEach(r => {
-                if (r.checked) {
-                    const nis = r.name.replace("status_", "");
-                    hasilAbsen[nis] = r.value;
-                }
+            selects.forEach(s => {
+                absensi.push({
+                    nis: s.dataset.nis,
+                    status: s.value
+                });
             });
 
-            const key = `absensi_${tanggal}_${kelas}`;
-            localStorage.setItem(key, JSON.stringify(hasilAbsen));
-
-            alert("Absensi tersimpan untuk kelas " + kelas);
-        }
-
-        function ubahWarna(select) {
-            select.classList.remove("Hadir", "Izin", "Sakit", "Alpa");
-            select.classList.add(select.value);
+            fetch("save_absen.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    tanggal,
+                    kelas,
+                    absensi
+                })
+            })
+                .then(r => r.text())
+                .then(r => {
+                    alert("Absensi berhasil disimpan!");
+                    window.location.href = "rekap.php";
+                });
         }
     </script>
 </body>
 </html>
+
+
+<!-- $q1 = $conn->query("SELECT * FROM siswaXI ORDER BY id DESC");
+
+while ($row = $q1->fetch_assoc()) {
+    $absenData[] = [
+        "tanggal" => $row['tanggal'] ?? '-',
+        "nama" => $row['nama'] ?? '-',
+        "kelas" => $row['kelas'] ?? 'XI',
+        "status" => $row['status'] ?? '-',
+        "alasan" => $row['alasan'] ?? '-'
+    ];
+}
+
+$q2 = $conn->query("SELECT * FROM siswaX ORDER BY id DESC");
+
+while ($row = $q2->fetch_assoc()) {
+    $absenData[] = [
+        "tanggal" => $row['tanggal'] ?? '-',
+        "nama" => $row['nama'] ?? '-',
+        "kelas" => $row['kelas'] ?? 'X',
+        "status" => $row['status'] ?? '-',
+        "alasan" => $row['alasan'] ?? '-'
+    ];
+} -->
