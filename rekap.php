@@ -1,31 +1,17 @@
 <?php
 include 'connect.php';
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// AMBIL DATA siswaX
 $absenData = [];
-$qX = $conn->query("SELECT * FROM siswaX ORDER BY id ASC");
-while ($row = $qX->fetch_assoc()) {
-  $absenData[] = [
-    "nama" => $row["Nama"],
-    "nis" => $row["NIS"],
-    "kelas" => "X",
-    "status" => isset($row["status"]) ? $row["status"] : "",
-    "alasan" => isset($row["alasan"]) ? $row["alasan"] : ""
-  ];
+
+// Ambil data dari siswa
+$q = $conn->query("SELECT no, Nama, Kelas, status, tanggal FROM siswa ORDER BY no ASC");
+while ($r = $q->fetch_assoc()) {
+  $absenData[] = $r;
 }
 
-// AMBIL DATA siswaXI
-$qXI = $conn->query("SELECT * FROM siswaXI ORDER BY id ASC");
-while ($row = $qXI->fetch_assoc()) {
-  $absenData[] = [
-    "nama" => $row["Nama"],
-    "nis" => $row["NIS"],
-    "kelas" => "XI",
-    "status" => isset($row["status"]) ? $row["status"] : "",
-    "alasan" => isset($row["alasan"]) ? $row["alasan"] : ""
-  ];
+// Ambil data dari siswaXI
+$q2 = $conn->query("SELECT no, Nama, Kelas, status, tanggal FROM siswaXI ORDER BY no ASC");
+while ($r = $q2->fetch_assoc()) {
+  $absenData[] = $r;
 }
 ?>
 <!DOCTYPE html>
@@ -33,72 +19,75 @@ while ($row = $qXI->fetch_assoc()) {
 
 <head>
   <meta charset="UTF-8">
-  <title>Histori Absensi</title>
+  <title>Rekap Absensi</title>
+  <link rel="stylesheet" href="css/style.css">
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background: #f5f5f5;
       margin: 0;
     }
 
-    .dashboard-header {
-      background: #2b6cb0;
-      padding: 15px;
-      color: white;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
     .container {
+      max-width: 900px;
+      margin: 30px auto;
       padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
-    .btn {
-      padding: 10px 13px;
-      border: none;
-      border-radius: 6px;
-      background: white;
-      cursor: pointer;
-      font-weight: bold;
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
     }
 
     .filter-box {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 15px;
     }
 
+    select,
+    input {
+      padding: 7px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .btn {
+      padding: 7px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #2b6cb0;
+      color: white;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
     }
 
     th {
       background: #2b6cb0;
       color: white;
-      padding: 12px;
-    }
-
-    td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    tr:hover {
-      background: #eef4ff;
     }
 
     .status {
-      padding: 5px 8px;
+      padding: 3px 7px;
       border-radius: 5px;
-      font-weight: bold;
       color: white;
+      font-weight: bold;
       display: inline-block;
     }
 
@@ -121,26 +110,29 @@ while ($row = $qXI->fetch_assoc()) {
 </head>
 
 <body>
-
-  <header class="dashboard-header">
-    <h2>Histori Absensi</h2>
-    <a href="absen.php"><button class="btn">Kembali</button></a>
-  </header>
-
+    <header class="dashboard-header">
+    <div class="header-left">
+        <img src="assets/absensi.png" alt="Logo Absensi" class="logo">
+        <h1>Absensi Kelas</h1>
+    </div>
+    <div class="header-right">
+        <span id="greeting" class="greeting"></span>
+        <a href="absen.php"><button class="btn">Kembali</button></a>
+    </div>
+</header>
   <div class="container">
+    <h2>Rekap Absensi</h2>
 
     <div class="filter-box">
       <select id="pilihKelas">
-        <option value="">Pilih Kelas</option>
-
+        <option value="">Semua Kelas</option>
         <?php
-        $kelas = $conn->query("SELECT DISTINCT kelas FROM siswaX ORDER BY kelas ASC");
-        while ($k = $kelas->fetch_assoc())
-          echo "<option value='{$k['kelas']}'>{$k['kelas']}</option>";
-
-        $kelas = $conn->query("SELECT DISTINCT kelas FROM siswaXI ORDER BY kelas ASC");
-        while ($k = $kelas->fetch_assoc())
-          echo "<option value='{$k['kelas']}'>{$k['kelas']}</option>";
+        $kelas1 = $conn->query("SELECT DISTINCT Kelas FROM siswa ORDER BY Kelas ASC");
+        while ($k = $kelas1->fetch_assoc())
+          echo "<option value='{$k['Kelas']}'>{$k['Kelas']}</option>";
+        $kelas2 = $conn->query("SELECT DISTINCT Kelas FROM siswaXI ORDER BY Kelas ASC");
+        while ($k = $kelas2->fetch_assoc())
+          echo "<option value='{$k['Kelas']}'>{$k['Kelas']}</option>";
         ?>
       </select>
 
@@ -160,16 +152,14 @@ while ($row = $qXI->fetch_assoc()) {
     <table>
       <thead>
         <tr>
+          <th>Tanggal</th>
           <th>Nama</th>
-          <th>NIS</th>
           <th>Kelas</th>
           <th>Status</th>
-          <th>Alasan</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
-
   </div>
 
   <script>
@@ -179,32 +169,30 @@ while ($row = $qXI->fetch_assoc()) {
       const tbody = document.getElementById("tbody");
       tbody.innerHTML = "";
       list.forEach(r => {
-        let statusClass = r.status ? r.status : "";
-        let alasanText = r.alasan ? r.alasan : "-";
+        const statusClass = r.status ? r.status : '';
+        const tanggal = r.tanggal ? r.tanggal : '-';
         tbody.innerHTML += `
-        <tr>
-            <td>${r.nama}</td>
-            <td>${r.nis}</td>
-            <td>${r.kelas}</td>
-            <td>${r.status ? `<span class="status ${statusClass}">${r.status}</span>` : ""}</td>
-            <td>${alasanText}</td>
-        </tr>
-        `;
+      <tr>
+        <td>${tanggal}</td>
+        <td>${r.Nama}</td>
+        <td>${r.Kelas}</td>
+        <td class="status ${statusClass}">${r.status}</td>
+      </tr>
+    `;
       });
     }
 
     function applyFilters() {
-      let kelas = document.getElementById("pilihKelas").value; // pakai id pilihKelas
-      let status = document.getElementById("filterStatus").value;
-      let nama = document.getElementById("filterNama").value.toLowerCase();
+      const kelas = document.getElementById("pilihKelas").value;
+      const status = document.getElementById("filterStatus").value;
+      const nama = document.getElementById("filterNama").value.toLowerCase();
 
-      const hasil = data.filter(r =>
-        (kelas === "" || r.kelas === kelas) &&
+      const filtered = data.filter(r =>
+        (kelas === "" || r.Kelas === kelas) &&
         (status === "" || r.status === status) &&
-        (nama === "" || r.nama.toLowerCase().includes(nama))
+        (nama === "" || r.Nama.toLowerCase().includes(nama))
       );
-
-      loadTable(hasil);
+      loadTable(filtered);
     }
 
     function resetFilters() {
@@ -214,6 +202,7 @@ while ($row = $qXI->fetch_assoc()) {
       loadTable(data);
     }
 
+    // Load awal
     loadTable(data);
   </script>
 
