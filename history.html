@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance History</title>
+<link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .filter-box {
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    select, input {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #2b6cb0;
+      color: white;
+    }
+
+    tr:hover {
+      background: #f0f4ff;
+    }
+
+    .status {
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .sick { background: #f6ad55; }
+    .alpha { background: #e53e3e; }
+    .leave { background: #38a169; }
+  </style>
+</head>
+<body>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <img src="assets/absensi.png" alt="Logo Absensi" class="logo">
+                <h1>Absensi Kelas</h1>
+            </div>
+            <div class="header-right">
+                <span id="greeting" class="greeting"></span>
+                <button id="logoutBtn" class="btn-secondary">Keluar</button>
+            </div>
+        </header>
+
+        <nav class="dashboard-nav">
+            <ul>
+                <li><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+                <li><a href="absen.html" class="nav-link">Absensi Harian</a></li>
+                <li><a href="rekap.html" class="nav-link">Rekap Absen</a></li>
+                <li><a href="datasiswa.php" class="nav-link">Data Siswa</a></li>
+                <li><a href="datakelas.php" class="nav-link">Data Kelas</a></li>
+                <li class="dropdown">
+                    <a href="#" class="nav-link">Laporan</a>
+                    <div class="dropdown-content">
+                        <a href="laporan_harian.html">Laporan Harian</a>
+                        <a href="laporan_bulanan.html">Laporan Bulanan</a>
+                    </div>
+                </li>
+                <li><a href="histori.html" class="nav-link">Histori Absensi</a></li>
+            </ul>
+        </nav>  <h1>Attendance History</h1>
+
+  <!-- Filter Section -->
+  <div class="filter-box">
+    <input type="date" id="filter-date" />
+
+    <select id="filter-status">
+      <option value="">Filter by Status</option>
+      <option value="Sick">sakit</option>
+      <option value="Alpha">Alpha</option>
+      <option value="Leave">izin</option>
+    </select>
+
+    <select id="filter-class">
+      <option value="">Filter by Class</option>
+      <option value="X">Class X</option>
+      <option value="XI">Class XI</option>
+      <option value="XII">Class XII</option>
+    </select>
+    
+<input type="text" id="filter-name" placeholder="Search name">
+
+    <button onclick="applyFilters()">Apply</button>
+    <button onclick="resetFilters()">Reset</button>
+  </div>
+
+  <!-- Attendance Table -->
+  <table id="attendance-table">
+    <thead>
+      <tr>
+        <th>tanggal</th>
+        <th>Nama</th>
+        <th>Kelas</th>
+        <th>Status</th>
+        <th>alasan</th>
+      </tr>
+    </thead>
+    <tbody id="attendance-body">
+      <!-- JavaScript will insert data here -->
+    </tbody>
+  </table>
+
+  <script>
+    const data = [
+      { date: '2025-01-10', name: 'Andi Pratama', class: 'X', status: 'Sick', alasan: 'Flu' },
+      { date: '2025-01-10', name: 'Budi Setiawan', class: 'XI', status: 'Alpha', alasan: '-' },
+      { date: '2025-01-11', name: 'Cindy Lestari', class: 'XII', status: 'Leave', alasan: 'Family event' },
+      { date: '2025-01-11', name: 'Anisa Rahma', class: 'X', status: 'Sick', alasan: 'Dizziness' }
+    ];
+
+    function renderTable(items) {
+      const tbody = document.getElementById('attendance-body');
+      tbody.innerHTML = '';
+
+      items.forEach(row => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${row.date}</td>
+          <td>${row.name}</td>
+          <td>${row.class}</td>
+          <td><span class="status ${row.status.toLowerCase()}">${row.status}</span></td>
+          <td>${row.reason}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function applyFilters() {
+      const date = document.getElementById('filter-date').value;
+      const status = document.getElementById('filter-status').value;
+      const cls = document.getElementById('filter-class').value;
+
+      const filtered = data.filter(row => {
+        return (
+          (date === '' || row.date === date) &&
+          (status === '' || row.status === status) &&
+          (cls === '' || row.class === cls)
+        );
+      });
+
+      renderTable(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-date').value = '';
+      document.getElementById('filter-status').value = '';
+      document.getElementById('filter-class').value = '';
+      renderTable(data);
+    }
+
+    // Initial render
+    renderTable(data);
+  </script>
+
+</body>
+</html>
